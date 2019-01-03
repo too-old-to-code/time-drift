@@ -6,7 +6,7 @@
   "scripts": {
     "test": "mocha test",
     "build": "node build-script",
-    "prepublish": "npm test && npm run build"
+    "prepare": "npm test && npm run build"
   },
   "author": {
     "name": "Andrew Trigg",
