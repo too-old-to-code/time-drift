@@ -83,7 +83,7 @@ where the colon can be replaced by a non-numerical character")
     // be anonymous
     add: function add (num, unit) {
       validateNum(num, 'add')
-      unitFirstChar = validateUnit(unit, 'add')
+      const unitFirstChar = validateUnit(unit, 'add')
       switch(unitFirstChar){
       case 'h':
         hours = (hours + num) % 24
@@ -106,7 +106,7 @@ where the colon can be replaced by a non-numerical character")
     // be anonymous
     subtract: function subtract (num, unit) {
       validateNum(num, 'subtract')
-      unitFirstChar = validateUnit(unit, 'subtract')
+      const unitFirstChar = validateUnit(unit, 'subtract')
       let count = 0;
       switch(unitFirstChar){
       case 'h':
