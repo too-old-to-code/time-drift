@@ -1,3 +1,4 @@
+"use strict"
 
 function timeDrift (time, separator) {
   const timeFormat = /^\d\d.\d\d(.\d\d)?$/
