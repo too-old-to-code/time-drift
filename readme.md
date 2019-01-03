@@ -1,7 +1,8 @@
-## TimeDrift  
-  
-    
-[![dependencies](https://img.shields.io/badge/dependencies-none-green.svg)](https://img.shields.io/badge/dependencies-none-green.svg) [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT)    
+## TimeDrift
+
+
+[![dependencies](https://img.shields.io/badge/dependencies-none-green.svg)](https://img.shields.io/badge/dependencies-none-green.svg) [![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://opensource.org/licenses/MIT) ![circleci](https://img.shields.io/circleci/project/github/RedSparr0w/node-csgo-parser.svg?style=popout/too-old-to-code/time-drift/tree/master.svg?style=svg)
+
 
 
 This is small package without any dependencies that allows for quick arithmetic with times.
