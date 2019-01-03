@@ -1,0 +1,160 @@
+(function(f){if(typeof exports==="object"&&typeof module!=="undefined"){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.timeDrift = f()}})(function(){var define,module,exports;return (function(){function r(e,n,t){function o(i,f){if(!n[i]){if(!e[i]){var c="function"==typeof require&&require;if(!f&&c)return c(i,!0);if(u)return u(i,!0);var a=new Error("Cannot find module '"+i+"'");throw a.code="MODULE_NOT_FOUND",a}var p=n[i]={exports:{}};e[i][0].call(p.exports,function(r){var n=e[i][1][r];return o(n||r)},p,p.exports,r,e,n,t)}return n[i].exports}for(var u="function"==typeof require&&require,i=0;i<t.length;i++)o(t[i]);return o}return r})()({1:[function(require,module,exports){
+
+function timeDrift (time, separator) {
+  const timeFormat = /^\d\d.\d\d(.\d\d)?$/
+
+  // Check that the time format is correct
+  if (!timeFormat.test(time)) {
+    throw new Error("Time format is incorrect. It should be either 'HH:MM:SS' or 'HH:MM', \
+where the colon can be replaced by a non-numerical character")
+  }
+
+  const timeComponents = time.split(/[.:\- ]/).map(component => Number(component))
+  let [hours, minutes, seconds] = timeComponents
+
+  // check hours are within valid range
+  if(hours > 23 || hours < 0){
+    throw new Error('Hours must be between 0 and 23')
+  }
+
+  // check minutes are within valid range
+  if(minutes > 59 || minutes < 0){
+    throw new Error('Minutes must be between 0 and 59')
+  }
+
+  // check seconds are within valid range
+  if(seconds != null && (seconds > 59 || seconds < 0)){
+    throw new Error('Seconds must be between 0 and 59')
+  }
+
+  // check separator is single non-numerical character
+  if(separator && (typeof separator !== 'string' || separator.length > 1)) {
+    throw new Error('Separator must be a single, non-numerical character')
+  }
+
+  // check that the first argument to the add and subtract methods is a number
+  function validateNum (num, method) {
+    if (typeof num !== 'number') {
+      throw new Error(`First argument of ${method} method must be a number`)
+    }
+  }
+
+  function validateUnit (unit, method) {
+    // check that the unit is a string
+    if (typeof unit !== 'string') {
+      throw new Error(`Second argument of ${method} method must be a string representing the unit of time`)
+    }
+
+    // just grab the first letter of the unit and lowercase it. This is enough to distinguish between
+    // units
+    let unitChar = unit.charAt(0).toLowerCase()
+
+    // check the time unit used begins with the first character of the words 'hours', 'minutes', or 'seconds'
+    if (!['h','m','s'].includes(unitChar)) {
+      throw new Error(`Second argument of ${method} method must be hours, minutes or seconds`)
+    }
+
+    // ensure that no calculations involving seconds can be performed if no seconds were stated in the
+    // original time to be changed
+    if (unitChar === 's' && seconds == null) {
+      throw new Error(`You can't adjust seconds if they weren't included in the original time given`)
+    }
+
+    return unitChar
+  }
+
+  const response = {
+    normalize (returnArray) {
+      // if no seconds were included, we need to remove the last element of the array
+      // which will be undefined
+      if (seconds == null) {
+        returnArray.pop()
+      }
+
+      // For each part of the time, ensure that if it is less
+      // than 10, that it has a preceding 0
+      return returnArray.map(function(part){
+        part = String(part)
+        return part.length < 2 ? '0' + part : part
+      }).join(separator || ':')
+    },
+
+    // This is a self-referencing function, and therefore cannot
+    // be anonymous
+    add: function add (num, unit) {
+      validateNum(num, 'add')
+      unitFirstChar = validateUnit(unit, 'add')
+      switch(unitFirstChar){
+      case 'h':
+        hours = (hours + num) % 24
+        break;
+      case 'm':
+        let hoursToAdd = Math.floor((minutes + num)/60);
+        minutes = (minutes + num) % 60;
+        add(hoursToAdd, 'h')
+        break;
+      case 's':
+        let minutesToAdd = Math.floor((seconds + num)/60);
+        seconds = (seconds + num) % 60;
+        add(minutesToAdd, 'm')
+        break;
+      }
+      return this
+    },
+
+    // This is a self-referencing function, and therefore cannot
+    // be anonymous
+    subtract: function subtract (num, unit) {
+      validateNum(num, 'subtract')
+      unitFirstChar = validateUnit(unit, 'subtract')
+      let count = 0;
+      switch(unitFirstChar){
+      case 'h':
+        let hourAnswer = hours - num;
+        while(hourAnswer < 0){
+          count ++
+          hourAnswer = 24 + hourAnswer
+        }
+        hours = hourAnswer
+        break;
+      case 'm':
+        let minuteAnswer = minutes - num;
+        while(minuteAnswer < 0){
+          count ++
+          minuteAnswer = 60 + minuteAnswer
+        }
+        minutes = minuteAnswer
+        if(count){
+          subtract(count, 'h')
+        }
+        break;
+      case 's':
+        let secondAnswer = seconds - num;
+        while(secondAnswer < 0){
+          count ++
+          secondAnswer = 60 + secondAnswer
+        }
+        seconds = secondAnswer
+        if(count){
+          subtract(count, 'm')
+        }
+        break;
+      }
+      return this
+    }
+  }
+
+  Object.defineProperty(response, 'val', {
+    get: function () {
+      return this.normalize([hours, minutes, seconds])
+    }
+  })
+
+  return response
+}
+
+module.exports = timeDrift
+},{}]},{},[1])(1)
+});
+
+//# sourceMappingURL=data:application/json;charset=utf-8;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIm5vZGVfbW9kdWxlcy9icm93c2VyLXBhY2svX3ByZWx1ZGUuanMiLCJzcmMvdGltZS1kcmlmdC5qcyJdLCJuYW1lcyI6W10sIm1hcHBpbmdzIjoiQUFBQTtBQ0FBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0E7QUFDQTtBQUNBO0FBQ0EiLCJmaWxlIjoiZ2VuZXJhdGVkLmpzIiwic291cmNlUm9vdCI6IiIsInNvdXJjZXNDb250ZW50IjpbIihmdW5jdGlvbigpe2Z1bmN0aW9uIHIoZSxuLHQpe2Z1bmN0aW9uIG8oaSxmKXtpZighbltpXSl7aWYoIWVbaV0pe3ZhciBjPVwiZnVuY3Rpb25cIj09dHlwZW9mIHJlcXVpcmUmJnJlcXVpcmU7aWYoIWYmJmMpcmV0dXJuIGMoaSwhMCk7aWYodSlyZXR1cm4gdShpLCEwKTt2YXIgYT1uZXcgRXJyb3IoXCJDYW5ub3QgZmluZCBtb2R1bGUgJ1wiK2krXCInXCIpO3Rocm93IGEuY29kZT1cIk1PRFVMRV9OT1RfRk9VTkRcIixhfXZhciBwPW5baV09e2V4cG9ydHM6e319O2VbaV1bMF0uY2FsbChwLmV4cG9ydHMsZnVuY3Rpb24ocil7dmFyIG49ZVtpXVsxXVtyXTtyZXR1cm4gbyhufHxyKX0scCxwLmV4cG9ydHMscixlLG4sdCl9cmV0dXJuIG5baV0uZXhwb3J0c31mb3IodmFyIHU9XCJmdW5jdGlvblwiPT10eXBlb2YgcmVxdWlyZSYmcmVxdWlyZSxpPTA7aTx0Lmxlbmd0aDtpKyspbyh0W2ldKTtyZXR1cm4gb31yZXR1cm4gcn0pKCkiLCJcbmZ1bmN0aW9uIHRpbWVEcmlmdCAodGltZSwgc2VwYXJhdG9yKSB7XG4gIGNvbnN0IHRpbWVGb3JtYXQgPSAvXlxcZFxcZC5cXGRcXGQoLlxcZFxcZCk/JC9cblxuICAvLyBDaGVjayB0aGF0IHRoZSB0aW1lIGZvcm1hdCBpcyBjb3JyZWN0XG4gIGlmICghdGltZUZvcm1hdC50ZXN0KHRpbWUpKSB7XG4gICAgdGhyb3cgbmV3IEVycm9yKFwiVGltZSBmb3JtYXQgaXMgaW5jb3JyZWN0LiBJdCBzaG91bGQgYmUgZWl0aGVyICdISDpNTTpTUycgb3IgJ0hIOk1NJywgXFxcbndoZXJlIHRoZSBjb2xvbiBjYW4gYmUgcmVwbGFjZWQgYnkgYSBub24tbnVtZXJpY2FsIGNoYXJhY3RlclwiKVxuICB9XG5cbiAgY29uc3QgdGltZUNvbXBvbmVudHMgPSB0aW1lLnNwbGl0KC9bLjpcXC0gXS8pLm1hcChjb21wb25lbnQgPT4gTnVtYmVyKGNvbXBvbmVudCkpXG4gIGxldCBbaG91cnMsIG1pbnV0ZXMsIHNlY29uZHNdID0gdGltZUNvbXBvbmVudHNcblxuICAvLyBjaGVjayBob3VycyBhcmUgd2l0aGluIHZhbGlkIHJhbmdlXG4gIGlmKGhvdXJzID4gMjMgfHwgaG91cnMgPCAwKXtcbiAgICB0aHJvdyBuZXcgRXJyb3IoJ0hvdXJzIG11c3QgYmUgYmV0d2VlbiAwIGFuZCAyMycpXG4gIH1cblxuICAvLyBjaGVjayBtaW51dGVzIGFyZSB3aXRoaW4gdmFsaWQgcmFuZ2VcbiAgaWYobWludXRlcyA+IDU5IHx8IG1pbnV0ZXMgPCAwKXtcbiAgICB0aHJvdyBuZXcgRXJyb3IoJ01pbnV0ZXMgbXVzdCBiZSBiZXR3ZWVuIDAgYW5kIDU5JylcbiAgfVxuXG4gIC8vIGNoZWNrIHNlY29uZHMgYXJlIHdpdGhpbiB2YWxpZCByYW5nZVxuICBpZihzZWNvbmRzICE9IG51bGwgJiYgKHNlY29uZHMgPiA1OSB8fCBzZWNvbmRzIDwgMCkpe1xuICAgIHRocm93IG5ldyBFcnJvcignU2Vjb25kcyBtdXN0IGJlIGJldHdlZW4gMCBhbmQgNTknKVxuICB9XG5cbiAgLy8gY2hlY2sgc2VwYXJhdG9yIGlzIHNpbmdsZSBub24tbnVtZXJpY2FsIGNoYXJhY3RlclxuICBpZihzZXBhcmF0b3IgJiYgKHR5cGVvZiBzZXBhcmF0b3IgIT09ICdzdHJpbmcnIHx8IHNlcGFyYXRvci5sZW5ndGggPiAxKSkge1xuICAgIHRocm93IG5ldyBFcnJvcignU2VwYXJhdG9yIG11c3QgYmUgYSBzaW5nbGUsIG5vbi1udW1lcmljYWwgY2hhcmFjdGVyJylcbiAgfVxuXG4gIC8vIGNoZWNrIHRoYXQgdGhlIGZpcnN0IGFyZ3VtZW50IHRvIHRoZSBhZGQgYW5kIHN1YnRyYWN0IG1ldGhvZHMgaXMgYSBudW1iZXJcbiAgZnVuY3Rpb24gdmFsaWRhdGVOdW0gKG51bSwgbWV0aG9kKSB7XG4gICAgaWYgKHR5cGVvZiBudW0gIT09ICdudW1iZXInKSB7XG4gICAgICB0aHJvdyBuZXcgRXJyb3IoYEZpcnN0IGFyZ3VtZW50IG9mICR7bWV0aG9kfSBtZXRob2QgbXVzdCBiZSBhIG51bWJlcmApXG4gICAgfVxuICB9XG5cbiAgZnVuY3Rpb24gdmFsaWRhdGVVbml0ICh1bml0LCBtZXRob2QpIHtcbiAgICAvLyBjaGVjayB0aGF0IHRoZSB1bml0IGlzIGEgc3RyaW5nXG4gICAgaWYgKHR5cGVvZiB1bml0ICE9PSAnc3RyaW5nJykge1xuICAgICAgdGhyb3cgbmV3IEVycm9yKGBTZWNvbmQgYXJndW1lbnQgb2YgJHttZXRob2R9IG1ldGhvZCBtdXN0IGJlIGEgc3RyaW5nIHJlcHJlc2VudGluZyB0aGUgdW5pdCBvZiB0aW1lYClcbiAgICB9XG5cbiAgICAvLyBqdXN0IGdyYWIgdGhlIGZpcnN0IGxldHRlciBvZiB0aGUgdW5pdCBhbmQgbG93ZXJjYXNlIGl0LiBUaGlzIGlzIGVub3VnaCB0byBkaXN0aW5ndWlzaCBiZXR3ZWVuXG4gICAgLy8gdW5pdHNcbiAgICBsZXQgdW5pdENoYXIgPSB1bml0LmNoYXJBdCgwKS50b0xvd2VyQ2FzZSgpXG5cbiAgICAvLyBjaGVjayB0aGUgdGltZSB1bml0IHVzZWQgYmVnaW5zIHdpdGggdGhlIGZpcnN0IGNoYXJhY3RlciBvZiB0aGUgd29yZHMgJ2hvdXJzJywgJ21pbnV0ZXMnLCBvciAnc2Vjb25kcydcbiAgICBpZiAoIVsnaCcsJ20nLCdzJ10uaW5jbHVkZXModW5pdENoYXIpKSB7XG4gICAgICB0aHJvdyBuZXcgRXJyb3IoYFNlY29uZCBhcmd1bWVudCBvZiAke21ldGhvZH0gbWV0aG9kIG11c3QgYmUgaG91cnMsIG1pbnV0ZXMgb3Igc2Vjb25kc2ApXG4gICAgfVxuXG4gICAgLy8gZW5zdXJlIHRoYXQgbm8gY2FsY3VsYXRpb25zIGludm9sdmluZyBzZWNvbmRzIGNhbiBiZSBwZXJmb3JtZWQgaWYgbm8gc2Vjb25kcyB3ZXJlIHN0YXRlZCBpbiB0aGVcbiAgICAvLyBvcmlnaW5hbCB0aW1lIHRvIGJlIGNoYW5nZWRcbiAgICBpZiAodW5pdENoYXIgPT09ICdzJyAmJiBzZWNvbmRzID09IG51bGwpIHtcbiAgICAgIHRocm93IG5ldyBFcnJvcihgWW91IGNhbid0IGFkanVzdCBzZWNvbmRzIGlmIHRoZXkgd2VyZW4ndCBpbmNsdWRlZCBpbiB0aGUgb3JpZ2luYWwgdGltZSBnaXZlbmApXG4gICAgfVxuXG4gICAgcmV0dXJuIHVuaXRDaGFyXG4gIH1cblxuICBjb25zdCByZXNwb25zZSA9IHtcbiAgICBub3JtYWxpemUgKHJldHVybkFycmF5KSB7XG4gICAgICAvLyBpZiBubyBzZWNvbmRzIHdlcmUgaW5jbHVkZWQsIHdlIG5lZWQgdG8gcmVtb3ZlIHRoZSBsYXN0IGVsZW1lbnQgb2YgdGhlIGFycmF5XG4gICAgICAvLyB3aGljaCB3aWxsIGJlIHVuZGVmaW5lZFxuICAgICAgaWYgKHNlY29uZHMgPT0gbnVsbCkge1xuICAgICAgICByZXR1cm5BcnJheS5wb3AoKVxuICAgICAgfVxuXG4gICAgICAvLyBGb3IgZWFjaCBwYXJ0IG9mIHRoZSB0aW1lLCBlbnN1cmUgdGhhdCBpZiBpdCBpcyBsZXNzXG4gICAgICAvLyB0aGFuIDEwLCB0aGF0IGl0IGhhcyBhIHByZWNlZGluZyAwXG4gICAgICByZXR1cm4gcmV0dXJuQXJyYXkubWFwKGZ1bmN0aW9uKHBhcnQpe1xuICAgICAgICBwYXJ0ID0gU3RyaW5nKHBhcnQpXG4gICAgICAgIHJldHVybiBwYXJ0Lmxlbmd0aCA8IDIgPyAnMCcgKyBwYXJ0IDogcGFydFxuICAgICAgfSkuam9pbihzZXBhcmF0b3IgfHwgJzonKVxuICAgIH0sXG5cbiAgICAvLyBUaGlzIGlzIGEgc2VsZi1yZWZlcmVuY2luZyBmdW5jdGlvbiwgYW5kIHRoZXJlZm9yZSBjYW5ub3RcbiAgICAvLyBiZSBhbm9ueW1vdXNcbiAgICBhZGQ6IGZ1bmN0aW9uIGFkZCAobnVtLCB1bml0KSB7XG4gICAgICB2YWxpZGF0ZU51bShudW0sICdhZGQnKVxuICAgICAgdW5pdEZpcnN0Q2hhciA9IHZhbGlkYXRlVW5pdCh1bml0LCAnYWRkJylcbiAgICAgIHN3aXRjaCh1bml0Rmlyc3RDaGFyKXtcbiAgICAgIGNhc2UgJ2gnOlxuICAgICAgICBob3VycyA9IChob3VycyArIG51bSkgJSAyNFxuICAgICAgICBicmVhaztcbiAgICAgIGNhc2UgJ20nOlxuICAgICAgICBsZXQgaG91cnNUb0FkZCA9IE1hdGguZmxvb3IoKG1pbnV0ZXMgKyBudW0pLzYwKTtcbiAgICAgICAgbWludXRlcyA9IChtaW51dGVzICsgbnVtKSAlIDYwO1xuICAgICAgICBhZGQoaG91cnNUb0FkZCwgJ2gnKVxuICAgICAgICBicmVhaztcbiAgICAgIGNhc2UgJ3MnOlxuICAgICAgICBsZXQgbWludXRlc1RvQWRkID0gTWF0aC5mbG9vcigoc2Vjb25kcyArIG51bSkvNjApO1xuICAgICAgICBzZWNvbmRzID0gKHNlY29uZHMgKyBudW0pICUgNjA7XG4gICAgICAgIGFkZChtaW51dGVzVG9BZGQsICdtJylcbiAgICAgICAgYnJlYWs7XG4gICAgICB9XG4gICAgICByZXR1cm4gdGhpc1xuICAgIH0sXG5cbiAgICAvLyBUaGlzIGlzIGEgc2VsZi1yZWZlcmVuY2luZyBmdW5jdGlvbiwgYW5kIHRoZXJlZm9yZSBjYW5ub3RcbiAgICAvLyBiZSBhbm9ueW1vdXNcbiAgICBzdWJ0cmFjdDogZnVuY3Rpb24gc3VidHJhY3QgKG51bSwgdW5pdCkge1xuICAgICAgdmFsaWRhdGVOdW0obnVtLCAnc3VidHJhY3QnKVxuICAgICAgdW5pdEZpcnN0Q2hhciA9IHZhbGlkYXRlVW5pdCh1bml0LCAnc3VidHJhY3QnKVxuICAgICAgbGV0IGNvdW50ID0gMDtcbiAgICAgIHN3aXRjaCh1bml0Rmlyc3RDaGFyKXtcbiAgICAgIGNhc2UgJ2gnOlxuICAgICAgICBsZXQgaG91ckFuc3dlciA9IGhvdXJzIC0gbnVtO1xuICAgICAgICB3aGlsZShob3VyQW5zd2VyIDwgMCl7XG4gICAgICAgICAgY291bnQgKytcbiAgICAgICAgICBob3VyQW5zd2VyID0gMjQgKyBob3VyQW5zd2VyXG4gICAgICAgIH1cbiAgICAgICAgaG91cnMgPSBob3VyQW5zd2VyXG4gICAgICAgIGJyZWFrO1xuICAgICAgY2FzZSAnbSc6XG4gICAgICAgIGxldCBtaW51dGVBbnN3ZXIgPSBtaW51dGVzIC0gbnVtO1xuICAgICAgICB3aGlsZShtaW51dGVBbnN3ZXIgPCAwKXtcbiAgICAgICAgICBjb3VudCArK1xuICAgICAgICAgIG1pbnV0ZUFuc3dlciA9IDYwICsgbWludXRlQW5zd2VyXG4gICAgICAgIH1cbiAgICAgICAgbWludXRlcyA9IG1pbnV0ZUFuc3dlclxuICAgICAgICBpZihjb3VudCl7XG4gICAgICAgICAgc3VidHJhY3QoY291bnQsICdoJylcbiAgICAgICAgfVxuICAgICAgICBicmVhaztcbiAgICAgIGNhc2UgJ3MnOlxuICAgICAgICBsZXQgc2Vjb25kQW5zd2VyID0gc2Vjb25kcyAtIG51bTtcbiAgICAgICAgd2hpbGUoc2Vjb25kQW5zd2VyIDwgMCl7XG4gICAgICAgICAgY291bnQgKytcbiAgICAgICAgICBzZWNvbmRBbnN3ZXIgPSA2MCArIHNlY29uZEFuc3dlclxuICAgICAgICB9XG4gICAgICAgIHNlY29uZHMgPSBzZWNvbmRBbnN3ZXJcbiAgICAgICAgaWYoY291bnQpe1xuICAgICAgICAgIHN1YnRyYWN0KGNvdW50LCAnbScpXG4gICAgICAgIH1cbiAgICAgICAgYnJlYWs7XG4gICAgICB9XG4gICAgICByZXR1cm4gdGhpc1xuICAgIH1cbiAgfVxuXG4gIE9iamVjdC5kZWZpbmVQcm9wZXJ0eShyZXNwb25zZSwgJ3ZhbCcsIHtcbiAgICBnZXQ6IGZ1bmN0aW9uICgpIHtcbiAgICAgIHJldHVybiB0aGlzLm5vcm1hbGl6ZShbaG91cnMsIG1pbnV0ZXMsIHNlY29uZHNdKVxuICAgIH1cbiAgfSlcblxuICByZXR1cm4gcmVzcG9uc2Vcbn1cblxubW9kdWxlLmV4cG9ydHMgPSB0aW1lRHJpZnQiXX0=
