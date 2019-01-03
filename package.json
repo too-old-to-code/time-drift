@@ -5,7 +5,8 @@
   "main": "dist/time-drift.min.js",
   "scripts": {
     "test": "mocha test",
-    "build": "node build-script"
+    "build": "node build-script",
+    "prepublish": "npm test && npm run build"
   },
   "author": {
     "name": "Andrew Trigg",
