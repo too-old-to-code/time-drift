@@ -1,7 +1,7 @@
 {
   "name": "time-drift",
-  "version": "1.0.1",
-  "description": "",
+  "version": "1.0.2",
+  "description": "From a given time, calculate a new time by adding time units to it",
   "main": "dist/time-drift.min.js",
   "scripts": {
     "test": "mocha test",
@@ -18,7 +18,6 @@
     "mocha": "^5.2.0",
     "uglifyify": "^5.0.1"
   },
-  "description": "From a given time, calculate a new time by adding time units to it",
   "keywords": [
     "time",
     "calculator",
