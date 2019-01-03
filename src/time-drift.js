@@ -79,32 +79,33 @@ where the colon can be replaced by a non-numerical character")
       }).join(separator || ':')
     },
 
-    // This is a self-referencing function, and therefore cannot
-    // be anonymous
-    add: function add (num, unit) {
+    hasCrossedMidnight: false,
+
+    // This is a self-referencing method
+    add (num, unit) {
       validateNum(num, 'add')
       const unitFirstChar = validateUnit(unit, 'add')
       switch(unitFirstChar){
       case 'h':
+        this.hasCrossedMidnight = Boolean(Math.floor((hours + num)/24))
         hours = (hours + num) % 24
         break
       case 'm':
         let hoursToAdd = Math.floor((minutes + num)/60)
         minutes = (minutes + num) % 60
-        add(hoursToAdd, 'h')
+        this.add(hoursToAdd, 'h')
         break
       case 's':
         let minutesToAdd = Math.floor((seconds + num)/60)
         seconds = (seconds + num) % 60
-        add(minutesToAdd, 'm')
+        this.add(minutesToAdd, 'm')
         break
       }
       return this
     },
 
-    // This is a self-referencing function, and therefore cannot
-    // be anonymous
-    subtract: function subtract (num, unit) {
+    // This is a self-referencing method
+    subtract (num, unit) {
       validateNum(num, 'subtract')
       const unitFirstChar = validateUnit(unit, 'subtract')
       let count = 0;
@@ -116,6 +117,9 @@ where the colon can be replaced by a non-numerical character")
           hourAnswer = 24 + hourAnswer
         }
         hours = hourAnswer
+        if (count) {
+          this.hasCrossedMidnight = true
+        }
         break
       case 'm':
         let minuteAnswer = minutes - num
@@ -125,7 +129,7 @@ where the colon can be replaced by a non-numerical character")
         }
         minutes = minuteAnswer
         if(count){
-          subtract(count, 'h')
+          this.subtract(count, 'h')
         }
         break
       case 's':
@@ -136,7 +140,7 @@ where the colon can be replaced by a non-numerical character")
         }
         seconds = secondAnswer
         if(count){
-          subtract(count, 'm')
+          this.subtract(count, 'm')
         }
         break
       }
@@ -149,6 +153,9 @@ where the colon can be replaced by a non-numerical character")
       return this.normalize([hours, minutes, seconds])
     }
   })
+
+  response.add = response.add.bind(response)
+  response.subtract = response.subtract.bind(response)
 
   return response
 }
