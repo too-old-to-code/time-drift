@@ -18,6 +18,12 @@
     "mocha": "^5.2.0",
     "uglifyify": "^5.0.1"
   },
+  "description": "From a given time, calculate a new time by adding time units to it",
+  "keywords": [
+    "time",
+    "calculator",
+    "calculate"
+  ],
   "bugs": {
     "url": "https://github.com/too-old-to-code/time-drift/issues"
   }
