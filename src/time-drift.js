@@ -86,17 +86,17 @@ where the colon can be replaced by a non-numerical character")
       switch(unitFirstChar){
       case 'h':
         hours = (hours + num) % 24
-        break;
+        break
       case 'm':
-        let hoursToAdd = Math.floor((minutes + num)/60);
-        minutes = (minutes + num) % 60;
+        let hoursToAdd = Math.floor((minutes + num)/60)
+        minutes = (minutes + num) % 60
         add(hoursToAdd, 'h')
-        break;
+        break
       case 's':
-        let minutesToAdd = Math.floor((seconds + num)/60);
-        seconds = (seconds + num) % 60;
+        let minutesToAdd = Math.floor((seconds + num)/60)
+        seconds = (seconds + num) % 60
         add(minutesToAdd, 'm')
-        break;
+        break
       }
       return this
     },
@@ -109,15 +109,15 @@ where the colon can be replaced by a non-numerical character")
       let count = 0;
       switch(unitFirstChar){
       case 'h':
-        let hourAnswer = hours - num;
+        let hourAnswer = hours - num
         while(hourAnswer < 0){
           count ++
           hourAnswer = 24 + hourAnswer
         }
         hours = hourAnswer
-        break;
+        break
       case 'm':
-        let minuteAnswer = minutes - num;
+        let minuteAnswer = minutes - num
         while(minuteAnswer < 0){
           count ++
           minuteAnswer = 60 + minuteAnswer
@@ -126,9 +126,9 @@ where the colon can be replaced by a non-numerical character")
         if(count){
           subtract(count, 'h')
         }
-        break;
+        break
       case 's':
-        let secondAnswer = seconds - num;
+        let secondAnswer = seconds - num
         while(secondAnswer < 0){
           count ++
           secondAnswer = 60 + secondAnswer
@@ -137,7 +137,7 @@ where the colon can be replaced by a non-numerical character")
         if(count){
           subtract(count, 'm')
         }
-        break;
+        break
       }
       return this
     }
