@@ -1,7 +1,9 @@
+"use strict"
+
 var expect = require('chai').expect
 var timeDrift = require('../src/time-drift')
 
-let errorMessages = {
+var errorMessages = {
   format: "Time format is incorrect. It should be either 'HH:MM:SS' or 'HH:MM', where the colon can be replaced by a non-numerical character",
   hours: "Hours must be between 0 and 23",
   minutes: "Minutes must be between 0 and 59",
