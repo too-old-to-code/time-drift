@@ -55,3 +55,5 @@ As you can see from the example above, timeDrift is chainable. You can chain mul
 The first argument to the `add()` and `subtract()` methods is the number of units you wish to add/subtract from the time.
 
 The second argument signifies the time unit to be used can be any string, as long as it begins with the letters 'h', 'm', or 's'.
+
+If the midnight boundary is passed during any calculation, the timeDrift object has a property `hasCrossedMidnight` that will be set to true.
