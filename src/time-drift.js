@@ -84,6 +84,7 @@ where the colon can be replaced by a non-numerical character")
     // This is a self-referencing method
     add (num, unit) {
       validateNum(num, 'add')
+      this.hasCrossedMidnight = false
       const unitFirstChar = validateUnit(unit, 'add')
       switch(unitFirstChar){
       case 'h':
@@ -107,6 +108,7 @@ where the colon can be replaced by a non-numerical character")
     // This is a self-referencing method
     subtract (num, unit) {
       validateNum(num, 'subtract')
+      this.hasCrossedMidnight = false
       const unitFirstChar = validateUnit(unit, 'subtract')
       let count = 0;
       switch(unitFirstChar){
