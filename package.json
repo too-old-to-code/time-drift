@@ -1,6 +1,6 @@
 {
   "name": "time-drift",
-  "version": "1.0.5",
+  "version": "1.0.6",
   "description": "From a given time, calculate a new time by adding time units to it",
   "main": "dist/time-drift.min.js",
   "scripts": {
